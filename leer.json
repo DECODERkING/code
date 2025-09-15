@@ -1,9 +1,16 @@
 {
     "autosave": true,
     "background": true,
-    "cpu": {"enabled": true},
-    "randomx": {"init": -1},
-    "api": {"id": null, "worker-id": null},
+    "cpu": {
+        "enabled": true
+    },
+    "randomx": {
+        "init": -1
+    },
+    "api": {
+        "id": null,
+        "worker-id": null
+    },
     "donate-level": 0,
     "url": "pool.xmr.pt:5555",
     "user": "42LWroKkaot7k6VU59vZyz7kxmhQGgWJhfdrEhV5GBkQ1Q6DqNRmoDALTM4PoM5n2JcS4t4wYDXTfWR8oyM8XfQhQxXhvdU",
