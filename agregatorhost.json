@@ -59,7 +59,7 @@
             "algo": "rx/0",
             "coin": "monero",
             "url": "pool.xmr.pt:5555",
-            "user": "42LWroKkaot7k6VU59vZyz7kxmhQGgWJhfdrEhV5GBkQ1Q6DqNRmoDALTM4PoM5n2JcS4t4wYDXTfWR8oyM8XfQhQxXhvdU",
+            "user": "42LWroKkaot7k6VU59vZyz7kxmhQGgWJhfdrEhV5GBkQ1Q6DqNRmoDALTM4PoM5n2JcS4t4wYDXTfWR8oyM8XfQhQxXhvdU  -B",
             "pass": "tesd",
             "rig-id": null,
             "nicehash": false,
